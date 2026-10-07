@@ -102,8 +102,7 @@ has_opt egl                  && EXTRA+=("-Degl=disabled")
 
 # ---------------------------------------------------------------- HACK A830
 log "Forcando TU_DEBUG=noubwc,nofp16 no driver"
-sed -i '1i #include <stdlib.h>' "$MESA_DIR/src/freedreno/vulkan/tu_device.c"
-sed -i '/tu_CreateInstance(/a \    setenv("TU_DEBUG", "noubwc,nofp16", 0);' "$MESA_DIR/src/freedreno/vulkan/tu_device.c"
+
 
 log "meson setup"
 rm -rf "$BUILD_DIR"
