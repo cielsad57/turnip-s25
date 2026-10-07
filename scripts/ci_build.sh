@@ -114,6 +114,11 @@ meson setup "$BUILD_DIR" "$MESA_DIR" \
   -Dvulkan-drivers=freedreno \
   -Dvulkan-beta=true \
   -Dfreedreno-kmds=kgsl \
+  -Dopengl=false \
+  -Dgles1=disabled \
+  -Dgles2=disabled \
+  -Dglx=disabled \
+  -Degl=disabled \
   "${EXTRA[@]}"
 
 log "ninja"
