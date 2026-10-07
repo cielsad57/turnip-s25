@@ -104,7 +104,7 @@ rm -rf "$BUILD_DIR"
 meson setup "$BUILD_DIR" "$MESA_DIR" \
   --cross-file "$CROSS" \
   -Dbuildtype=release \
-  -Db_lto=true \
+  -Db_lto=false \
   -Db_ndebug=true \
   -Dstrip=true \
   -Dplatforms=android \
