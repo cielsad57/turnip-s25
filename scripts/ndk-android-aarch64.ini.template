@@ -1,0 +1,21 @@
+[binaries]
+c = '@NDK_BIN@/aarch64-linux-android@API_LEVEL@-clang'
+cpp = '@NDK_BIN@/aarch64-linux-android@API_LEVEL@-clang++'
+ar = '@NDK_BIN@/llvm-ar'
+strip = '@NDK_BIN@/llvm-strip'
+pkg-config = 'pkg-config'
+
+[host_machine]
+system = 'android'
+cpu_family = 'aarch64'
+cpu = 'armv8-a'
+endian = 'little'
+
+[properties]
+needs_exe_wrapper = true
+
+[built-in options]
+c_args = ['-fPIC', '-DANDROID', '-D__ANDROID_API__=@API_LEVEL@', '-O3']
+cpp_args = ['-fPIC', '-DANDROID', '-D__ANDROID_API__=@API_LEVEL@', '-O3']
+c_link_args = ['-Wl,-Bsymbolic', '-llog']
+cpp_link_args = ['-Wl,-Bsymbolic', '-llog']

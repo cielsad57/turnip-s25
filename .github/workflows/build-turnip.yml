@@ -1,0 +1,54 @@
+name: Build Turnip (Adrenotools)
+
+on:
+  workflow_dispatch:
+    inputs:
+      mesa_ref:
+        description: "Branch ou tag do Mesa (ex: main, mesa-25.2.0)"
+        default: "main"
+        required: true
+      api_level:
+        description: "API Android alvo (34 = Android 14)"
+        default: "34"
+        required: true
+      apply_patches:
+        description: "Aplicar patches/*.patch"
+        type: boolean
+        default: true
+  push:
+    paths:
+      - "patches/*.patch"
+      - "scripts/ci_build.sh"
+      - "scripts/package_adrenotools.py"
+      - ".github/workflows/build-turnip.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Dependências
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ninja-build patchelf glslang-tools flex bison pkg-config unzip
+          pip3 install --user --upgrade "meson>=1.4" mako pyyaml packaging
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Build
+        env:
+          MESA_REF: ${{ github.event.inputs.mesa_ref || 'main' }}
+          API_LEVEL: ${{ github.event.inputs.api_level || '34' }}
+          APPLY_PATCHES: ${{ github.event.inputs.apply_patches || 'true' }}
+        run: bash scripts/ci_build.sh
+
+      - name: Upload do pacote
+        uses: actions/upload-artifact@v4
+        with:
+          name: turnip-a830-perf
+          path: |
+            out/*.zip
+            out/build-info.txt
+          if-no-files-found: error

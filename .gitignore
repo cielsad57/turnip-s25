@@ -1,0 +1,14 @@
+# Saídas de build e logs locais
+work/
+out/
+build-a830/
+logs/
+scripts/generated_crossfile.ini
+__pycache__/
+*.zip
+
+# Binário do emulador (não versionar)
+lib/
+
+# Entrada corrompida no disco (rode chkdsk D: /f)
+scripts/s25_logcat.py

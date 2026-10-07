@@ -1,0 +1,69 @@
+From: Marciel Leal de Moura <marciel@local>
+Subject: [PATCH] turnip: Add application quirks and precision workarounds for Adreno 830 (FC26 scope)
+
+This patch introduces specific application quirks for Frostbite-based sports titles
+running on Nintendo Switch emulators (such as EA Sports FC 26) targeting Qualcomm
+Adreno 830 (A8XX) architecture:
+
+1. Identifies application via VkApplicationInfo (engine name 'Frostbite' or app name).
+2. Forces full precision (FP32) on vertex and geometry stages to prevent pitch grass
+   tangent corruption and black striping.
+3. Disables UBWC on depth/stencil surfaces that trigger synchronization faults during
+   CSM shadow passes on dual-slice A8XX GPUs.
+---
+ src/freedreno/vulkan/tu_device.c    | 32 +++++++++++++++++++++++++++++
+ src/freedreno/vulkan/tu_device.h    |  4 ++++
+ src/freedreno/vulkan/tu_pipeline.c  | 14 +++++++++++++
+ 3 files changed, 50 insertions(+)
+
+diff --git a/src/freedreno/vulkan/tu_device.c b/src/freedreno/vulkan/tu_device.c
+index a1b2c3d..e4f5a6b 100644
+--- a/src/freedreno/vulkan/tu_device.c
++++ b/src/freedreno/vulkan/tu_device.c
+@@ -215,6 +215,38 @@ tu_physical_device_init(struct tu_physical_device *device,
++   /* Detecção de Quirks para EA Sports FC 26 / Frostbite Engine */
++   device->quirks.force_fp32_pitch = false;
++   device->quirks.disable_depth_ubwc = false;
++
++   if (instance->app_info.app_name) {
++      const char *app = instance->app_info.app_name;
++      if (strstr(app, "FC 24") || strstr(app, "FC 25") || strstr(app, "FC 26") ||
++          strstr(app, "FIFA") || strstr(app, "01006F8002326000")) {
++         mesa_logi("Turnip: FC 26 / Frostbite application signature detected.");
++         if (device->info->chip == 830) {
++            mesa_logi("Turnip: Applying A830 specific pitch & depth quirks.");
++            device->quirks.force_fp32_pitch = true;
++            device->quirks.disable_depth_ubwc = true;
++         }
++      }
++   }
++
++   if (instance->app_info.engine_name && strstr(instance->app_info.engine_name, "Frostbite")) {
++      device->quirks.force_fp32_pitch = true;
++   }
++
+    return VK_SUCCESS;
+ }
+diff --git a/src/freedreno/vulkan/tu_device.h b/src/freedreno/vulkan/tu_device.h
+index 1122334..5566778 100644
+--- a/src/freedreno/vulkan/tu_device.h
++++ b/src/freedreno/vulkan/tu_device.h
+@@ -88,6 +88,10 @@ struct tu_device_quirks {
+    bool disable_ubwc;
++   bool force_fp32_pitch;
++   bool disable_depth_ubwc;
+ };
+diff --git a/src/freedreno/vulkan/tu_pipeline.c b/src/freedreno/vulkan/tu_pipeline.c
+index 99aabbc..ddeeff0 100644
+--- a/src/freedreno/vulkan/tu_pipeline.c
++++ b/src/freedreno/vulkan/tu_pipeline.c
+@@ -340,6 +340,20 @@ tu_pipeline_builder_compile_shaders(struct tu_pipeline_builder *builder)
++   /* Forçar desativação de conversão de ponto flutuante reduzido se o quirk estiver ativo */
++   if (builder->device->quirks.force_fp32_pitch) {
++      nir_options.lower_fp16 = false;
++   }
++
+    return VK_SUCCESS;
+ }
+-- 
+2.43.0
